@@ -20,6 +20,7 @@ namespace ReShareBlazorApp.Api.Services
             var productModel = new Product
             {
                 Name = product.Name,
+                Description = product.Description,
                 Price = product.Price,
                 AddedAt = product.AddedAt,
                 ExpiresAt = product.ExpiresAt,
@@ -38,6 +39,7 @@ namespace ReShareBlazorApp.Api.Services
                 Select(p => new ProductDTO
                 {
                     Name = p.Name,
+                    Description = p.Description,
                     Price = p.Price,
                     AddedAt = p.AddedAt,
                     ExpiresAt = p.ExpiresAt,

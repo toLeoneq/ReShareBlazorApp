@@ -6,5 +6,6 @@ namespace ReShareBlazorApp.Api.Interfaces.Services
     {
         Task<RegisterResponse?> RegisterAsync(RegisterRequest request);
         Task<LoginResponse?> LoginAsync(LoginRequest request);
+        Task<UserProfileDTO?> GetUserProfileAsync(string username);
     }
 }

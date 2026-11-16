@@ -10,6 +10,9 @@ namespace ReShareBlazorApp.Web.Models
         [MaxLength(50, ErrorMessage = "Nazwa produktu nie może mieć więcej niż 50 znaków.")]
         public string Name { get; set; } = "";
 
+        [MaxLength(2000, ErrorMessage = "Opis produktu nie może mieć więcej niż 2000 znaków.")]
+        public string? Description { get; set; }
+
         [Range(0.01, 100000, ErrorMessage = "Cena musi być większa od 0.")]
         public decimal Price { get; set; }
 

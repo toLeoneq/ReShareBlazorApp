@@ -83,5 +83,24 @@ namespace ReShareBlazorApp.Api.Services
                 Email = user.Email ?? ""
             };
         }
+        public async Task<UserProfileDTO?> GetUserProfileAsync(string username)
+        {
+            var user = await _userManager.FindByNameAsync(username);
+            if (user == null)
+            {
+                user = await _userManager.FindByEmailAsync(username);
+            }
+            if (user == null || !user.IsActive)
+            {
+                return null;
+            }
+            return new UserProfileDTO
+            {
+                Id = user.Id,
+                UserName = user.UserName ?? "",
+                Email = user.Email ?? "",
+                CreatedAt = user.CreatedAt
+            };
+        }
     }
 }

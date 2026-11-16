@@ -40,6 +40,16 @@ namespace ReShareBlazorApp.Api.Controllers
             }
             return Ok(result);
         }
+        [HttpGet("user/{username}")]
+        public async Task<IActionResult> GetUserProfile(string username)
+        {
+            var profile = await _authService.GetUserProfileAsync(username);
+            if (profile == null)
+            {
+                return NotFound(new { Message = "Nie znaleziono użytkownika." });
+            }
+            return Ok(profile);
+        }
 
     }
 }

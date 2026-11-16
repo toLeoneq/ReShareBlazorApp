@@ -25,6 +25,7 @@ namespace ReShareBlazorApp.Web.ApiServices
             var product = new ProductDTO
             {
                 Name = productModel.Name,
+                Description = productModel.Description,
                 Price = productModel.Price,
                 AddedAt = productModel.AddedAt,
                 ExpiresAt = productModel.ExpiresAt,

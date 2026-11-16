@@ -1,70 +1,185 @@
 @page "/profil"
+@page "/profil/{Username}"
+@rendermode InteractiveServer
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
+@using ReShareBlazorApp.Shared.DTOs
+@using ReShareBlazorApp.Web.ApiServices
+@using ReShareBlazorApp.Web.Components.Elements
+@using ReShareBlazorApp.Web.Components.Pages.NavBar
+@inject AuthenticationStateProvider authStateProvider
+@inject AuthApiService authApi
+@inject NavigationManager nav
 
-<PageTitle>Mój profil – ODDAJ DALEJ</PageTitle>
+<PageTitle>@(string.IsNullOrEmpty(userName) ? "Mój profil" : $"Profil @{userName}") – ODDAJ DALEJ</PageTitle>
 
-<PageHeader Title="Mój profil" Subtitle="Twoje dane, ogłoszenia i opinie w jednym miejscu." />
+<PageHeader Title="@(string.IsNullOrEmpty(userName) ? "Mój profil" : $"Profil @{userName}")"
+            Subtitle="Twoje dane, ogłoszenia i opinie w jednym miejscu." />
 
 <section class="home-section">
     <div class="home-container">
 
-        <!-- Karta profilu -->
-        <div class="profile-card">
-            <span class="avatar avatar-lg">TY</span>
+        @if (isLoading)
+        {
+            <div class="category-loading">
+                <p>Ładowanie profilu…</p>
+            </div>
+        }
+        else if (userNotFound)
+        {
+            <div class="category-empty">
+                <h3>Użytkownik nie został znaleziony</h3>
+                <p>Nie odnaleziono profilu dla nazwy: <strong>@Username</strong></p>
+                <a class="home-btn home-btn-primary" href="/">Wróć na stronę główną</a>
+            </div>
+        }
+        else
+        {
+            <!-- Karta profilu -->
+            <div class="profile-card">
+                <span class="avatar avatar-lg">@GetInitials(userName)</span>
 
-            <div class="profile-info">
-                <h2>Twoje imię</h2>
-                <AuthorizeView>
-                    <Authorized Context="auth">
-                        <p class="profile-email">@auth.User.FindFirst(ClaimTypes.Email)?.Value</p>
-                    </Authorized>
-                </AuthorizeView>
-                <p class="home-card-verified">✔ E-mail zweryfikowany</p>
-                <p class="profile-rating">★ 4,8 <span>(12 opinii)</span></p>
+                <div class="profile-info">
+                    <h2>@userName</h2>
+                    @if (!string.IsNullOrEmpty(userEmail))
+                    {
+                        <p class="profile-email">@userEmail</p>
+                    }
+                    <p class="home-card-verified">✔ E-mail zweryfikowany</p>
+                    <p class="profile-rating">★ 4,8 <span>(12 opinii)</span></p>
+                </div>
+
+                @if (isOwnProfile)
+                {
+                    <a class="home-btn home-btn-outline" href="/ustawienia">Edytuj profil</a>
+                }
+                else
+                {
+                    <a class="home-btn home-btn-outline" href="/wiadomosci">Napisz wiadomość</a>
+                }
             </div>
 
-            <a class="home-btn home-btn-outline" href="/ustawienia">Edytuj profil</a>
-        </div>
+            <!-- Statystyki -->
+            <div class="profile-stats">
+                <div class="profile-stat"><strong>5</strong><span>Ogłoszenia</span></div>
+                <div class="profile-stat"><strong>2</strong><span>Poszukiwania</span></div>
+                <div class="profile-stat"><strong>9</strong><span>Transakcje</span></div>
+                <div class="profile-stat"><strong>14</strong><span>Ulubione</span></div>
+            </div>
 
-        <!-- Statystyki -->
-        <div class="profile-stats">
-            <div class="profile-stat"><strong>5</strong><span>Ogłoszenia</span></div>
-            <div class="profile-stat"><strong>2</strong><span>Poszukiwania</span></div>
-            <div class="profile-stat"><strong>9</strong><span>Transakcje</span></div>
-            <div class="profile-stat"><strong>14</strong><span>Ulubione</span></div>
-        </div>
+            <!-- Zakładki -->
+            <div class="profile-tabs" role="tablist">
+                <button class="profile-tab active" type="button" role="tab">Moje ogłoszenia</button>
+                <button class="profile-tab" type="button" role="tab">Moje poszukiwania</button>
+                <button class="profile-tab" type="button" role="tab">Ulubione</button>
+                <button class="profile-tab" type="button" role="tab">Transakcje</button>
+                <button class="profile-tab" type="button" role="tab">Opinie</button>
+            </div>
 
-        <!-- Zakładki -->
-        <div class="profile-tabs" role="tablist">
-            <button class="profile-tab active" type="button" role="tab">Moje ogłoszenia</button>
-            <button class="profile-tab" type="button" role="tab">Moje poszukiwania</button>
-            <button class="profile-tab" type="button" role="tab">Ulubione</button>
-            <button class="profile-tab" type="button" role="tab">Transakcje</button>
-            <button class="profile-tab" type="button" role="tab">Opinie</button>
-        </div>
+            <!-- Moje ogłoszenia -->
+            <div class="home-cards">
+                <ListingCard Title="2 bilety na koncert – Kraków" Category="Bilety i rezerwacje" Type="Sprzedam"
+                             Price="240 zł" Location="Kraków" Term="12.12.2026" Published="08.11.2026" />
+                <ListingCard Title="Wózek dziecięcy do oddania" Category="Rodzina i dzieci" Type="Oddam"
+                             Price="Bezpłatnie" Location="Łódź" Term="od zaraz" Published="07.11.2026" />
+            </div>
 
-        <!-- Moje ogłoszenia -->
-        <div class="home-cards">
-            <ListingCard Title="2 bilety na koncert – Kraków" Category="Bilety i rezerwacje" Type="Sprzedam"
-                         Price="240 zł" Location="Kraków" Term="12.12.2026" Published="08.11.2026" Verified="true" />
-            <ListingCard Title="Wózek dziecięcy do oddania" Category="Rodzina i dzieci" Type="Oddam"
-                         Price="Bezpłatnie" Location="Łódź" Term="od zaraz" Published="07.11.2026" Verified="true" />
-        </div>
-
-        <!-- Opinie -->
-        <h2 class="home-section-title profile-subtitle">Opinie o Tobie</h2>
-        <div class="profile-reviews">
-            <article class="profile-review">
-                <p class="profile-rating">★★★★★ <span>Anna K.</span></p>
-                <p>Szybki kontakt, wszystko zgodnie z opisem. Polecam.</p>
-            </article>
-            <article class="profile-review">
-                <p class="profile-rating">★★★★☆ <span>Marek N.</span></p>
-                <p>Sprawna wymiana, drobne opóźnienie w odpowiedzi.</p>
-            </article>
-        </div>
+            <!-- Opinie -->
+            <h2 class="home-section-title profile-subtitle">Opinie o użytkowniku</h2>
+            <div class="profile-reviews">
+                <article class="profile-review">
+                    <p class="profile-rating">★★★★★ <span>Anna K.</span></p>
+                    <p>Szybki kontakt, wszystko zgodnie z opisem. Polecam.</p>
+                </article>
+                <article class="profile-review">
+                    <p class="profile-rating">★★★★☆ <span>Marek N.</span></p>
+                    <p>Sprawna wymiana, drobne opóźnienie w odpowiedzi.</p>
+                </article>
+            </div>
+        }
     </div>
 </section>
 
 <SiteFooter />
+
+@code {
+    [Parameter]
+    public string? Username { get; set; }
+
+    private string? userName;
+    private string? userEmail;
+    private bool isLoading = true;
+    private bool userNotFound = false;
+    private bool isOwnProfile = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        userNotFound = false;
+
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        var currentUser = authState.User;
+        var currentUserName = currentUser.Identity?.Name ?? currentUser.FindFirst(ClaimTypes.Name)?.Value;
+        var currentUserEmail = currentUser.FindFirst(ClaimTypes.Email)?.Value;
+
+        // Jeśli w URL nie podano nazwy użytkownika (np. wejście na /profil)
+        if (string.IsNullOrWhiteSpace(Username))
+        {
+            if (currentUser.Identity?.IsAuthenticated == true && !string.IsNullOrWhiteSpace(currentUserName))
+            {
+                // Przekieruj na /profil/@nazwa aby nazwa była w linku
+                nav.NavigateTo($"/profil/@{currentUserName}", replace: true);
+                return;
+            }
+            else
+            {
+                // Niezalogowany użytkownik wchodzący na /profil
+                nav.NavigateTo("/login");
+                return;
+            }
+        }
+
+        var cleanUsername = Username.TrimStart('@');
+
+        // Sprawdź czy to profil aktualnie zalogowanego użytkownika
+        if (currentUser.Identity?.IsAuthenticated == true &&
+            string.Equals(currentUserName, cleanUsername, StringComparison.OrdinalIgnoreCase))
+        {
+            isOwnProfile = true;
+            userName = currentUserName;
+            userEmail = currentUserEmail;
+        }
+
+        // Pobierz dane użytkownika z API / bazy
+        var profile = await authApi.GetUserProfileAsync(cleanUsername);
+        if (profile != null)
+        {
+            userName = profile.UserName;
+            userEmail = profile.Email;
+
+            if (currentUser.Identity?.IsAuthenticated == true &&
+                string.Equals(currentUserName, profile.UserName, StringComparison.OrdinalIgnoreCase))
+            {
+                isOwnProfile = true;
+            }
+        }
+        else if (string.IsNullOrEmpty(userName))
+        {
+            userNotFound = true;
+        }
+
+        isLoading = false;
+    }
+
+    private string GetInitials(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return "TY";
+
+        var clean = name.TrimStart('@').Trim();
+        if (clean.Length <= 2)
+            return clean.ToUpper();
+
+        return clean.Substring(0, 2).ToUpper();
+    }
+}

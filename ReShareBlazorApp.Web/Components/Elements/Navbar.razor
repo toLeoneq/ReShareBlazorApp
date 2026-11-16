@@ -16,7 +16,18 @@
                 <NavLink class="main-navbar-link" ActiveClass="active" href="/wiadomosci">Wiadomości</NavLink>
             </li>
             <li class="main-navbar-item">
-                <NavLink class="main-navbar-link" ActiveClass="active" href="/profil">Profil</NavLink>
+                <AuthorizeView>
+                    <Authorized Context="auth">
+                        @{
+                            var currentName = auth.User.Identity?.Name ?? auth.User.FindFirst(ClaimTypes.Name)?.Value;
+                            var profileHref = !string.IsNullOrEmpty(currentName) ? $"/profil/@{currentName}" : "/profil";
+                        }
+                        <NavLink class="main-navbar-link" ActiveClass="active" href="@profileHref">Profil</NavLink>
+                    </Authorized>
+                    <NotAuthorized>
+                        <NavLink class="main-navbar-link" ActiveClass="active" href="/profil">Profil</NavLink>
+                    </NotAuthorized>
+                </AuthorizeView>
             </li>
             <li class="main-navbar-item">
                 <NavLink class="main-navbar-link" ActiveClass="active" href="/login">Zaloguj się</NavLink>

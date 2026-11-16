@@ -1,0 +1,138 @@
+@page "/kategorie/{Slug}"
+@rendermode InteractiveServer
+@using ReShareBlazorApp.Api.Date.Enums
+@using ReShareBlazorApp.Shared.DTOs
+@using ReShareBlazorApp.Web.ApiServices
+@using ReShareBlazorApp.Web.Components.Elements
+@using ReShareBlazorApp.Web.Components.Pages.NavBar
+@inject ProductApiService productApi
+@inject NavigationManager nav
+
+<PageTitle>@categoryName – ODDAJ DALEJ</PageTitle>
+
+<PageHeader Title="@categoryName" Subtitle="@categoryDescription" />
+
+<section class="home-section">
+    <div class="home-container">
+
+        @if (isLoading)
+        {
+            <div class="category-loading">
+                <p>Ładowanie ogłoszeń…</p>
+            </div>
+        }
+        else if (products.Count == 0)
+        {
+            <div class="category-empty">
+                <h3>Brak ogłoszeń</h3>
+                <p>W tej kategorii nie ma jeszcze żadnych ogłoszeń.</p>
+                <a class="home-btn home-btn-primary" href="/">Wróć na stronę główną</a>
+            </div>
+        }
+        else
+        {
+            <div class="home-section-head" style="margin-bottom: 24px;">
+                <p class="page-count">Znaleziono @products.Count @GetOgloszeniaSuffix(products.Count)</p>
+            </div>
+
+            <div class="home-cards">
+                @foreach (var product in products)
+                {
+                    <ListingCard Title="@product.Name"
+                                 Category="@GetCategoryDisplayName(product.Category)"
+                                 Type="Sprzedam"
+                                 Price="@FormatPrice(product.Price)"
+                                 Location="Polska"
+                                 Term="@product.ExpiresAt.ToString("dd.MM.yyyy")"
+                                 Published="@product.AddedAt.ToString("dd.MM.yyyy")" />
+                }
+            </div>
+        }
+
+        <div class="home-section-footer" style="margin-top: 40px;">
+            <a class="home-btn home-btn-outline" href="/">← Powrót do strony głównej</a>
+        </div>
+    </div>
+</section>
+
+<SiteFooter />
+
+@code {
+    [Parameter]
+    public string Slug { get; set; } = "";
+
+    private List<ProductDTO> products = new();
+    private bool isLoading = true;
+    private string categoryName = "";
+    private string categoryDescription = "";
+    private ProductCategory? mappedCategory;
+
+    private static readonly Dictionary<string, (string Name, string Description, ProductCategory? Category)> SlugMap = new()
+    {
+        ["bilety-i-rezerwacje"] = ("Bilety i rezerwacje", "Koncerty, mecze, vouchery, bilety, spa", ProductCategory.Tickets),
+        ["wyjazdy-i-podroze"] = ("Wyjazdy i podróże", "Hotele, wakacje, wycieczki, noclegi", ProductCategory.Trips),
+        ["transport-i-miejsca"] = ("Transport i miejsca", "Przejazdy, samochody, busy, przewóz", ProductCategory.Transports),
+        ["uslugi-i-wolne-terminy"] = ("Usługi i wolne terminy", "Fachowcy, fotografia, opieka, instruktorzy", ProductCategory.Services),
+    };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+
+        if (SlugMap.TryGetValue(Slug, out var info))
+        {
+            categoryName = info.Name;
+            categoryDescription = info.Description;
+            mappedCategory = info.Category;
+        }
+        else
+        {
+            categoryName = "Nieznana kategoria";
+            categoryDescription = "";
+            mappedCategory = null;
+        }
+
+        try
+        {
+            if (mappedCategory.HasValue)
+            {
+                products = await productApi.GetProductsAsync(number: 50, category: mappedCategory);
+            }
+            else
+            {
+                products = new List<ProductDTO>();
+            }
+        }
+        catch
+        {
+            products = new List<ProductDTO>();
+        }
+
+        isLoading = false;
+    }
+
+    private static string FormatPrice(decimal price)
+    {
+        return price == 0 ? "Bezpłatnie" : $"{price:N2} zł";
+    }
+
+    private static string GetCategoryDisplayName(ProductCategory category) => category switch
+    {
+        ProductCategory.Tickets => "Bilety i rezerwacje",
+        ProductCategory.Reservations => "Rezerwacje",
+        ProductCategory.Trips => "Wyjazdy i podróże",
+        ProductCategory.Transports => "Transport i miejsca",
+        ProductCategory.Services => "Usługi i wolne terminy",
+        _ => category.ToString()
+    };
+
+    private static string GetOgloszeniaSuffix(int count)
+    {
+        if (count == 1) return "ogłoszenie";
+        if (count >= 2 && count <= 4) return "ogłoszenia";
+        if (count >= 5 && count <= 21) return "ogłoszeń";
+        var lastDigit = count % 10;
+        if (lastDigit >= 2 && lastDigit <= 4) return "ogłoszenia";
+        return "ogłoszeń";
+    }
+}

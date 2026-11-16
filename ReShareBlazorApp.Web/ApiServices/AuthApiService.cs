@@ -41,5 +41,19 @@ namespace ReShareBlazorApp.Web.ApiServices
 
             return await response.Content.ReadFromJsonAsync<RegisterResponse>();
         }
+        public async Task<UserProfileDTO?> GetUserProfileAsync(string username)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"api/auth/user/{Uri.EscapeDataString(username)}");
+                if (!response.IsSuccessStatusCode)
+                    return null;
+                return await response.Content.ReadFromJsonAsync<UserProfileDTO>();
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }

@@ -2129,10 +2129,16 @@ input[type="search"] {
     border: 1px solid #d5d9df;
     border-radius: 8px;
     font-size: 14px;
+    font-family: inherit;
     background: #fff;
     color: #333;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+textarea.product-input {
+    resize: vertical;
+    min-height: 90px;
 }
 
     .product-input:focus {
@@ -2394,3 +2400,39 @@ input[type="search"] {
         transform: translateY(0);
     }
 }
+
+
+/* ---------- 13. Strona kategorii ---------- */
+.category-loading {
+    text-align: center;
+    padding: 80px 0;
+    color: var(--muted);
+    font-size: 1.1rem;
+}
+
+    .category-loading p {
+        margin: 0;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+@keyframes pulse {
+    0%, 100% { opacity: .5; }
+    50% { opacity: 1; }
+}
+
+.category-empty {
+    text-align: center;
+    padding: 80px 0;
+}
+
+    .category-empty h3 {
+        margin: 0 0 8px;
+        font-size: 1.5rem;
+        color: var(--ink);
+    }
+
+    .category-empty p {
+        margin: 0 0 28px;
+        color: var(--muted);
+        font-size: 1.05rem;
+    }

@@ -25,18 +25,20 @@
             </div>
 
             <div class="product-field">
+                <label>Opis</label>
+                <InputTextArea @bind-Value="productModel.Description"
+                               class="product-input"
+                               rows="4"
+                               placeholder="Wpisz opis produktu" />
+                <ValidationMessage For="@(() => productModel.Description)" />
+            </div>
+
+            <div class="product-field">
                 <label>Cena</label>
                 <InputNumber @bind-Value="productModel.Price"
                              class="product-input"
                              placeholder="Wpisz cenę produktu" />
                 <ValidationMessage For="@(() => productModel.Price)" />
-            </div>
-
-            <div class="product-field">
-                <label>Data dodania</label>
-                <InputDate @bind-Value="productModel.AddedAt"
-                           class="product-input" />
-                <ValidationMessage For="@(() => productModel.AddedAt)" />
             </div>
 
             <div class="product-field">
@@ -53,7 +55,7 @@
                     <option value="">Wybierz kategorię</option>
                     @foreach (var category in Enum.GetValues<ProductCategory>())
                     {
-                        <option value="@category">@category</option>
+                        <option value="@category">@GetCategoryName(category)</option>
                     }
                 </InputSelect>
                 <ValidationMessage For="@(() => productModel.Category)" />
@@ -67,10 +69,27 @@
 </EditForm>
 
 @code {
-    public ProductModel productModel { get; set; } = new();
-
-        public async Task AddProduct()
+    public ProductModel productModel { get; set; } = new()
     {
+        ExpiresAt = DateTime.Now
+    };
+
+    public async Task AddProduct()
+    {
+        productModel.AddedAt = DateTime.Now;  // ustawiane automatycznie przy wysyłaniu
         await productService.AddProductAsync(productModel);
+    }
+
+    private string GetCategoryName(ProductCategory category)
+    {
+        return category switch
+        {
+            ProductCategory.Tickets => "Bilety",
+            ProductCategory.Reservations => "Rezerwacje",
+            ProductCategory.Trips => "Wycieczki",
+            ProductCategory.Transports => "Transport",
+            ProductCategory.Services => "Usługi",
+            _ => category.ToString()
+        };
     }
 }
