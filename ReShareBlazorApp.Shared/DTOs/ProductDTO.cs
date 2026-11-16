@@ -8,6 +8,8 @@ namespace ReShareBlazorApp.Shared.DTOs
 {
     public class ProductDTO
     {
+        public int Id { get; set; }
+
         public string Name { get; set; } = "";
 
         public string? Description { get; set; }
@@ -21,5 +23,7 @@ namespace ReShareBlazorApp.Shared.DTOs
         public ProductCategory Category { get; set; }
 
         public int UserId { get; set; }
+
+        public string? UserName { get; set; }
     }
 }

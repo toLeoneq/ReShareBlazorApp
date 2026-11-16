@@ -38,6 +38,7 @@ namespace ReShareBlazorApp.Api.Services
             var productsDtoList = listOfProducts.
                 Select(p => new ProductDTO
                 {
+                    Id = p.Id,
                     Name = p.Name,
                     Description = p.Description,
                     Price = p.Price,
@@ -45,9 +46,29 @@ namespace ReShareBlazorApp.Api.Services
                     ExpiresAt = p.ExpiresAt,
                     Category = p.Category,
                     UserId = p.UserId,
+                    UserName = p.user?.UserName
                 })
                 .ToList();
             return productsDtoList;
+        }
+        public async Task<ProductDTO?> GetProductByIdAsync(int id)
+        {
+            var product = await _productRepository.GetProductByIdAsync(id);
+            if (product == null)
+                return null;
+
+            return new ProductDTO
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
+                AddedAt = product.AddedAt,
+                ExpiresAt = product.ExpiresAt,
+                Category = product.Category,
+                UserId = product.UserId,
+                UserName = product.user?.UserName
+            };
         }
     }
 }

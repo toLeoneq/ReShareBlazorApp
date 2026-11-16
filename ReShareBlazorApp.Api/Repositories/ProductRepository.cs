@@ -36,7 +36,7 @@ namespace ReShareBlazorApp.Api.Repositories
         {
             try
             {
-                var query = _context.Products.AsQueryable();
+                var query = _context.Products.Include(p => p.user).AsQueryable();
                 if(category.HasValue)
                 {
                     query = query.Where(p => p.Category == category.Value);
@@ -51,6 +51,20 @@ namespace ReShareBlazorApp.Api.Repositories
             {
                 _logger.LogError($"[ProductRepository] Error occured in GetAllProducts : {ex}");
                 return new List<Product>();
+            }
+        }
+        public async Task<Product?> GetProductByIdAsync(int id)
+        {
+            try
+            {
+                return await _context.Products
+                    .Include(p => p.user)
+                    .FirstOrDefaultAsync(p => p.Id == id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"[ProductRepository] Error occured in GetProductByIdAsync : {ex}");
+                return null;
             }
         }
     }

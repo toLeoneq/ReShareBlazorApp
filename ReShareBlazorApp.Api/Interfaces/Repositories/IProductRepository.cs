@@ -7,5 +7,6 @@ namespace ReShareBlazorApp.Api.Interfaces.Repositories
     {
         Task<bool> AddProductAsync(Product product);
         Task<List<Product>> GetProducts(int number = 5,ProductCategory? category = null);
+        Task<Product?> GetProductByIdAsync(int id);
     }
 }

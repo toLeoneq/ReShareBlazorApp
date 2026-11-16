@@ -1,0 +1,243 @@
+@page "/ogloszenie/{Id:int}"
+@page "/oferta/{Id:int}"
+@rendermode InteractiveServer
+@using ReShareBlazorApp.Api.Date.Enums
+@using ReShareBlazorApp.Shared.DTOs
+@using ReShareBlazorApp.Web.ApiServices
+@using ReShareBlazorApp.Web.Components.Elements
+@using ReShareBlazorApp.Web.Components.Pages.NavBar
+@inject ProductApiService productApi
+@inject NavigationManager nav
+
+<PageTitle>@(product != null ? $"{product.Name} – ODDAJ DALEJ" : "Ogłoszenie – ODDAJ DALEJ")</PageTitle>
+
+<section class="home-section" style="padding-top: 36px;">
+    <div class="home-container">
+
+        <a class="product-back-link" href="@backUrl">
+            ← Wróć do listy ogłoszeń
+        </a>
+
+        @if (isLoading)
+        {
+            <div class="category-loading">
+                <p>Ładowanie szczegółów ogłoszenia…</p>
+            </div>
+        }
+        else if (product == null)
+        {
+            <div class="category-empty">
+                <h3>Ogłoszenie nie zostało znalezione</h3>
+                <p>Podane ogłoszenie nie istnieje lub zostało usunięte.</p>
+                <a class="home-btn home-btn-primary" href="/">Przejdź do strony głównej</a>
+            </div>
+        }
+        else
+        {
+            <div class="product-detail-layout">
+
+                <!-- Główna kolumna -->
+                <div class="product-detail-main">
+                    <div class="product-detail-card">
+
+                        <div class="product-detail-badge-row">
+                            <a class="home-chip" href="@($"/kategorie/{GetCategorySlug(product.Category)}")" style="background: var(--brand-soft); color: var(--brand);">
+                                @GetCategoryDisplayName(product.Category)
+                            </a>
+                            <span class="home-card-type" style="position: static;">
+                                Oferta
+                            </span>
+                        </div>
+
+                        <h1 class="product-detail-title">@product.Name</h1>
+
+                        <p class="product-detail-price @(product.Price == 0 ? "is-free" : "")">
+                            @(product.Price == 0 ? "Bezpłatnie" : $"{product.Price:N2} zł")
+                        </p>
+
+                        <!-- Szczegółowe metadane -->
+                        <div class="product-detail-meta-grid">
+                            <div class="product-detail-meta-item">
+                                <span>Termin ważności</span>
+                                <strong>@product.ExpiresAt.ToString("dd.MM.yyyy")</strong>
+                            </div>
+                            <div class="product-detail-meta-item">
+                                <span>Dodano</span>
+                                <strong>@product.AddedAt.ToString("dd.MM.yyyy")</strong>
+                            </div>
+                            <div class="product-detail-meta-item">
+                                <span>Kategoria</span>
+                                <strong>@GetCategoryDisplayName(product.Category)</strong>
+                            </div>
+                            <div class="product-detail-meta-item">
+                                <span>Numer ogłoszenia</span>
+                                <strong>#@product.Id</strong>
+                            </div>
+                        </div>
+
+                        <!-- Opis ogłoszenia -->
+                        <div class="product-detail-desc">
+                            <h3>Opis</h3>
+                            @if (!string.IsNullOrWhiteSpace(product.Description))
+                            {
+                                <div class="product-detail-desc-text">@product.Description</div>
+                            }
+                            else
+                            {
+                                <p style="color: var(--muted); font-style: italic;">
+                                    Brak szczegółowego opisu dla tego ogłoszenia.
+                                </p>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kolumna boczna: Sprzedawca i akcje -->
+                <aside class="product-detail-sidebar">
+
+                    <!-- Karta sprzedającego -->
+                    <div class="product-seller-card">
+                        <div class="product-seller-header">
+                            <span class="avatar avatar-lg">
+                                @GetInitials(product.UserName)
+                            </span>
+                            <div>
+                                <h3 class="product-seller-name">
+                                    @(string.IsNullOrEmpty(product.UserName) ? "Użytkownik" : product.UserName)
+                                </h3>
+                                <p class="product-seller-verified">✔ Zweryfikowany użytkownik</p>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(product.UserName))
+                        {
+                            <a class="home-btn home-btn-outline page-full" href="@($"/profil/@{product.UserName}")">
+                                Zobacz profil użytkownika
+                            </a>
+                        }
+
+                        <a class="home-btn home-btn-primary page-full" href="/wiadomosci">
+                            Napisz wiadomość
+                        </a>
+                    </div>
+
+                    <!-- Karta bezpieczeństwa -->
+                    <div class="product-safety-card">
+                        <h4>Bezpieczne przekazanie</h4>
+                        <ul>
+                            <li>Spotkaj się w bezpiecznym, publicznym miejscu.</li>
+                            <li>Sprawdź bilety lub rezerwację przed dokonaniem płatności.</li>
+                            <li>Nigdy nie podawaj haseł ani kodów SMS.</li>
+                        </ul>
+                    </div>
+
+                </aside>
+
+            </div>
+
+            <!-- Podobne oferty w tej samej kategorii -->
+            @if (similarProducts.Count > 0)
+            {
+                <div style="margin-top: 56px;">
+                    <div class="home-section-head" style="margin-bottom: 24px;">
+                        <h2 class="home-section-title" style="margin: 0;">Inne oferty w tej kategorii</h2>
+                        <a class="home-link" href="@($"/kategorie/{GetCategorySlug(product.Category)}")">
+                            Zobacz wszystkie →
+                        </a>
+                    </div>
+
+                    <div class="home-cards">
+                        @foreach (var sim in similarProducts)
+                        {
+                            <ListingCard Title="@sim.Name"
+                                         Category="@GetCategoryDisplayName(sim.Category)"
+                                         Type="Sprzedam"
+                                         Price="@(sim.Price == 0 ? "Bezpłatnie" : $"{sim.Price:N2} zł")"
+                                         Location="Polska"
+                                         Term="@sim.ExpiresAt.ToString("dd.MM.yyyy")"
+                                         Published="@sim.AddedAt.ToString("dd.MM.yyyy")"
+                                         Link="@($"/ogloszenie/{sim.Id}")" />
+                        }
+                    </div>
+                </div>
+            }
+        }
+
+    </div>
+</section>
+
+<SiteFooter />
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private ProductDTO? product;
+    private List<ProductDTO> similarProducts = new();
+    private bool isLoading = true;
+    private string backUrl = "/";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        try
+        {
+            product = await productApi.GetProductByIdAsync(Id);
+
+            if (product != null)
+            {
+                backUrl = $"/kategorie/{GetCategorySlug(product.Category)}";
+
+                // Pobierz podobne oferty z tej samej kategorii
+                var categoryProducts = await productApi.GetProductsAsync(number: 5, category: product.Category);
+                similarProducts = categoryProducts.Where(p => p.Id != product.Id).Take(4).ToList();
+            }
+            else
+            {
+                backUrl = "/";
+                similarProducts.Clear();
+            }
+        }
+        catch
+        {
+            product = null;
+            similarProducts.Clear();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private static string GetCategoryDisplayName(ProductCategory category) => category switch
+    {
+        ProductCategory.Tickets => "Bilety i rezerwacje",
+        ProductCategory.Reservations => "Bilety i rezerwacje",
+        ProductCategory.Trips => "Wyjazdy i podróże",
+        ProductCategory.Transports => "Transport i miejsca",
+        ProductCategory.Services => "Usługi i wolne terminy",
+        _ => category.ToString()
+    };
+
+    private static string GetCategorySlug(ProductCategory category) => category switch
+    {
+        ProductCategory.Tickets => "bilety-i-rezerwacje",
+        ProductCategory.Reservations => "bilety-i-rezerwacje",
+        ProductCategory.Trips => "wyjazdy-i-podroze",
+        ProductCategory.Transports => "transport-i-miejsca",
+        ProductCategory.Services => "uslugi-i-wolne-terminy",
+        _ => "bilety-i-rezerwacje"
+    };
+
+    private static string GetInitials(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return "U";
+
+        var clean = name.TrimStart('@').Trim();
+        if (clean.Length <= 2)
+            return clean.ToUpper();
+
+        return clean.Substring(0, 2).ToUpper();
+    }
+}

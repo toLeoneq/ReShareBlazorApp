@@ -1,16 +1,18 @@
 <article class="home-card">
-    <div class="home-card-image @TypeClass">
+    <a href="@Link" class="home-card-image @TypeClass" style="display: block; text-decoration: none;">
         @if (!string.IsNullOrEmpty(ImageUrl))
         {
             <img src="@ImageUrl" alt="@Title" loading="lazy" />
         }
         <span class="home-card-type">@Type</span>
-        <button class="home-card-fav" type="button" aria-label="Dodaj do ulubionych">♡</button>
-    </div>
+        <button class="home-card-fav" type="button" aria-label="Dodaj do ulubionych" @onclick:preventDefault="true">♡</button>
+    </a>
 
     <div class="home-card-body">
         <p class="home-card-category">@Category</p>
-        <h3 class="home-card-title">@Title</h3>
+        <h3 class="home-card-title">
+            <a href="@Link" style="color: inherit; text-decoration: none;">@Title</a>
+        </h3>
         <p class="home-card-price">@Price</p>
 
         <ul class="home-card-meta">
@@ -18,7 +20,6 @@
             <li>Termin: @Term</li>
             <li>Dodano: @Published</li>
         </ul>
-
 
         <a class="home-btn home-btn-outline" href="@Link">Zobacz szczegóły</a>
     </div>

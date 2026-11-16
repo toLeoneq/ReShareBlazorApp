@@ -19,10 +19,11 @@
                 <ListingCard Title="@product.Name"
                              Category="@product.Category.ToString()"
                              Type="Sprzedam"
-                             Price="@product.Price.ToString("F2")"
-                             Location="Kraków"
-                             Term="@product.ExpiresAt.ToString("dd.MM.yyyy HH:mm")"
-                             Published="@product.AddedAt.ToString("dd.MM.yyyy HH:mm")"
+                             Price="@(product.Price == 0 ? "Bezpłatnie" : $"{product.Price:N2} zł")"
+                             Location="Polska"
+                             Term="@product.ExpiresAt.ToString("dd.MM.yyyy")"
+                             Published="@product.AddedAt.ToString("dd.MM.yyyy")"
+                             Link="@($"/ogloszenie/{product.Id}")"
                              />
             }
         </div>

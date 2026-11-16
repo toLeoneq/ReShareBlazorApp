@@ -37,6 +37,16 @@ namespace ReShareBlazorApp.Api.Controllers
             var products = await _productService.GetProductsAsync(request.Number, request.Category);
             return Ok(products);
         }
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<ProductDTO>> GetProductById(int id)
+        {
+            var product = await _productService.GetProductByIdAsync(id);
+            if (product == null)
+            {
+                return NotFound(new { Message = "Nie znaleziono ogłoszenia." });
+            }
+            return Ok(product);
+        }
 
     }
 }
