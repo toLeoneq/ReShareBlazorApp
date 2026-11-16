@@ -34,7 +34,15 @@ namespace ReShareBlazorApp.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<List<ProductDTO>>> GetProducts([FromQuery] ProductRequest request)
         {
-            var products = await _productService.GetProductsAsync(request.Number, request.Category);
+            var count = request.Number <= 0 ? 50 : request.Number;
+            var products = await _productService.GetProductsAsync(
+                count,
+                request.Category,
+                request.Query,
+                request.MinPrice,
+                request.MaxPrice,
+                request.DateFrom,
+                request.DateTo);
             return Ok(products);
         }
         [HttpGet("{id:int}")]

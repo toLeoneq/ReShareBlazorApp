@@ -1,9 +1,16 @@
 @page "/odkrywaj"
+@page "/oferty"
+@rendermode InteractiveServer
+@using ReShareBlazorApp.Api.Date.Enums
+@using ReShareBlazorApp.Shared.DTOs
+@using ReShareBlazorApp.Web.ApiServices
+@using ReShareBlazorApp.Web.Components.Elements
+@inject ProductApiService productApi
+@inject NavigationManager nav
 
 <PageTitle>Odkrywaj – ODDAJ DALEJ</PageTitle>
 
 <PageHeader Title="Odkrywaj" Subtitle="Przeglądaj ogłoszenia dodane przez innych użytkowników." />
-
 
 <section class="home-section">
     <div class="home-container page-layout">
@@ -14,95 +21,227 @@
 
                 <label class="home-field">
                     <span>Czego szukasz?</span>
-                    <input type="search" name="q" placeholder="np. rower" />
+                    <input type="search" name="q" value="@SearchQuery" placeholder="np. bilety, koncert..." />
                 </label>
 
                 <label class="home-field">
                     <span>Kategoria</span>
                     <select name="kategoria">
                         <option value="">Wszystkie</option>
-                        <option>Bilety i rezerwacje</option>
-                        <option>Wyjazdy i podróże</option>
-                        <option>Transport i miejsca</option>
-                        <option>Usługi i wolne terminy</option>
+                        <option value="Bilety i rezerwacje" selected="@IsCategoryMatched("bilet", "rezerwac", "tickets")">Bilety i rezerwacje</option>
+                        <option value="Wyjazdy i podróże" selected="@IsCategoryMatched("wyjazd", "podróż", "podroz", "trips")">Wyjazdy i podróże</option>
+                        <option value="Transport i miejsca" selected="@IsCategoryMatched("transport", "transports")">Transport i miejsca</option>
+                        <option value="Usługi i wolne terminy" selected="@IsCategoryMatched("usług", "uslug", "termin", "services")">Usługi i wolne terminy</option>
                     </select>
                 </label>
-
-                <fieldset class="page-fieldset">
-                    <legend>Typ ogłoszenia</legend>
-                    <label><input type="checkbox" name="typ" value="sprzedam" /> Sprzedam</label>
-                    <label><input type="checkbox" name="typ" value="oddam" /> Oddam</label>
-                    <label><input type="checkbox" name="typ" value="wolne-miejsce" /> Mam wolne miejsce</label>
-                    <label><input type="checkbox" name="typ" value="wolny-termin" /> Wolny termin</label>
-                    <label><input type="checkbox" name="typ" value="wymienie" /> Wymienię</label>
-                </fieldset>
 
                 <label class="home-field">
                     <span>Lokalizacja</span>
-                    <input type="text" name="lokalizacja" placeholder="Miejscowość lub kod" />
-                </label>
-
-                <label class="home-field">
-                    <span>Promień</span>
-                    <select name="promien">
-                        <option value="5">5 km</option>
-                        <option value="10">10 km</option>
-                        <option value="25">25 km</option>
-                        <option value="50">50 km</option>
-                        <option value="100">100 km</option>
-                    </select>
+                    <input type="text" name="lokalizacja" value="@LocationParam" placeholder="Miejscowość lub kod" />
                 </label>
 
                 <div class="page-price-row">
                     <label class="home-field">
                         <span>Cena od</span>
-                        <input type="number" name="cenaMin" min="0" />
+                        <input type="number" name="cenaMin" value="@MinPriceParam" min="0" placeholder="0" />
                     </label>
                     <label class="home-field">
                         <span>Cena do</span>
-                        <input type="number" name="cenaMax" min="0" />
+                        <input type="number" name="cenaMax" value="@MaxPriceParam" min="0" placeholder="1000" />
                     </label>
                 </div>
 
-                <button class="home-btn home-btn-primary page-full" type="submit">Pokaż wyniki</button>
+                <button class="home-btn home-btn-primary page-full" type="submit">Zastosuj filtry</button>
+                @if (HasActiveFilters)
+                {
+                    <a class="home-btn home-btn-outline page-full" style="display: block; text-align: center; margin-top: 8px;" href="/odkrywaj">
+                        Wyczyść filtry
+                    </a>
+                }
             </form>
         </aside>
 
         <div class="page-results">
             <div class="home-section-head page-results-head">
-                <p class="page-count">Znaleziono 6 ogłoszeń</p>
+                <p class="page-count">
+                    @if (isLoading)
+                    {
+                        <span>Wyszukiwanie ogłoszeń…</span>
+                    }
+                    else
+                    {
+                        <span>Znaleziono @products.Count @GetOgloszeniaSuffix(products.Count)</span>
+                    }
+                </p>
 
                 <label class="page-sort">
                     <span>Sortuj:</span>
-                    <select>
-                        <option>Najnowsze</option>
-                        <option>Cena rosnąco</option>
-                        <option>Cena malejąco</option>
-                        <option>Najbliżej mnie</option>
+                    <select @bind="selectedSort" @bind:after="ApplySorting">
+                        <option value="newest">Najnowsze</option>
+                        <option value="price-asc">Cena rosnąco</option>
+                        <option value="price-desc">Cena malejąco</option>
                     </select>
                 </label>
             </div>
 
-            <div class="home-cards">
-                <ListingCard Title="2 bilety na koncert – Kraków" Category="Bilety i rezerwacje" Type="Sprzedam"
-                             Price="240 zł" Location="Kraków" Term="12.12.2026" Published="08.11.2026" Verified="true" />
-                <ListingCard Title="Wolne miejsce w aucie do Berlina" Category="Transport i miejsca" Type="Mam wolne miejsce"
-                             Price="60 zł" Location="Warszawa" Term="20.11.2026" Published="08.11.2026" Verified="true" />
-                <ListingCard Title="Nocleg dla dwóch osób – Zakopane" Category="Wyjazdy i podróże" Type="Sprzedam"
-                             Price="350 zł" Location="Zakopane" Term="05.12.2026" Published="05.11.2026" />
-                <ListingCard Title="Korepetycje z angielskiego" Category="Usługi i wolne terminy" Type="Mam wolny termin"
-                             Price="70 zł / godz." Location="Poznań" Term="pon–pt po 16:00" Published="04.11.2026" Verified="true" />
-            </div>
-
-            <nav class="page-pagination" aria-label="Strony wyników">
-                <a class="page-page" href="#">‹</a>
-                <a class="page-page active" href="#">1</a>
-                <a class="page-page" href="#">2</a>
-                <a class="page-page" href="#">3</a>
-                <a class="page-page" href="#">›</a>
-            </nav>
+            @if (isLoading)
+            {
+                <div class="category-loading" style="padding: 60px 0;">
+                    <p>Ładowanie wyników…</p>
+                </div>
+            }
+            else if (products.Count == 0)
+            {
+                <div class="category-empty" style="padding: 60px 0;">
+                    <h3>Brak wyników</h3>
+                    <p>Nie znaleziono ogłoszeń spełniających podane kryteria.</p>
+                    <a class="home-btn home-btn-primary" href="/odkrywaj">Pokaż wszystkie ogłoszenia</a>
+                </div>
+            }
+            else
+            {
+                <div class="home-cards">
+                    @foreach (var product in products)
+                    {
+                        <ListingCard Title="@product.Name"
+                                     Category="@GetCategoryDisplayName(product.Category)"
+                                     Type="Sprzedam"
+                                     Price="@(product.Price == 0 ? "Bezpłatnie" : $"{product.Price:N2} zł")"
+                                     Location="Polska"
+                                     Term="@product.ExpiresAt.ToString("dd.MM.yyyy")"
+                                     Published="@product.AddedAt.ToString("dd.MM.yyyy")"
+                                     Link="@($"/ogloszenie/{product.Id}")" />
+                    }
+                </div>
+            }
         </div>
     </div>
 </section>
 
 <SiteFooter />
+
+@code {
+    [SupplyParameterFromQuery(Name = "q")]
+    public string? SearchQuery { get; set; }
+
+    [SupplyParameterFromQuery(Name = "kategoria")]
+    public string? CategoryParam { get; set; }
+
+    [SupplyParameterFromQuery(Name = "typ")]
+    public string? TypeParam { get; set; }
+
+    [SupplyParameterFromQuery(Name = "lokalizacja")]
+    public string? LocationParam { get; set; }
+
+    [SupplyParameterFromQuery(Name = "od")]
+    public string? DateFromParam { get; set; }
+
+    [SupplyParameterFromQuery(Name = "do")]
+    public string? DateToParam { get; set; }
+
+    [SupplyParameterFromQuery(Name = "cenaMin")]
+    public decimal? MinPriceParam { get; set; }
+
+    [SupplyParameterFromQuery(Name = "cenaMax")]
+    public decimal? MaxPriceParam { get; set; }
+
+    private List<ProductDTO> products = new();
+    private bool isLoading = true;
+    private string selectedSort = "newest";
+
+    private bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(SearchQuery) ||
+        !string.IsNullOrWhiteSpace(CategoryParam) ||
+        !string.IsNullOrWhiteSpace(LocationParam) ||
+        MinPriceParam.HasValue ||
+        MaxPriceParam.HasValue ||
+        !string.IsNullOrWhiteSpace(DateFromParam) ||
+        !string.IsNullOrWhiteSpace(DateToParam);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+
+        var category = MapCategory(CategoryParam);
+        DateTime? dateFrom = DateTime.TryParse(DateFromParam, out var d1) ? d1 : null;
+        DateTime? dateTo = DateTime.TryParse(DateToParam, out var d2) ? d2 : null;
+
+        try
+        {
+            products = await productApi.GetProductsAsync(
+                number: 50,
+                category: category,
+                query: SearchQuery,
+                minPrice: MinPriceParam,
+                maxPrice: MaxPriceParam,
+                dateFrom: dateFrom,
+                dateTo: dateTo);
+
+            ApplySorting();
+        }
+        catch
+        {
+            products = new List<ProductDTO>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ApplySorting()
+    {
+        products = selectedSort switch
+        {
+            "price-asc" => products.OrderBy(p => p.Price).ToList(),
+            "price-desc" => products.OrderByDescending(p => p.Price).ToList(),
+            _ => products.OrderByDescending(p => p.AddedAt).ToList()
+        };
+    }
+
+    private bool IsCategoryMatched(params string[] keywords)
+    {
+        if (string.IsNullOrWhiteSpace(CategoryParam))
+            return false;
+
+        var lower = CategoryParam.ToLowerInvariant();
+        return keywords.Any(k => lower.Contains(k.ToLowerInvariant()));
+    }
+
+    private static ProductCategory? MapCategory(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var v = value.Trim().ToLowerInvariant();
+        if (v.Contains("bilet") || v.Contains("rezerwac") || v == "tickets" || v == "reservations" || v == "bilety-i-rezerwacje")
+            return ProductCategory.Tickets;
+        if (v.Contains("wyjazd") || v.Contains("podróż") || v.Contains("podroz") || v.Contains("nocleg") || v == "trips" || v == "wyjazdy-i-podroze")
+            return ProductCategory.Trips;
+        if (v.Contains("transport") || v.Contains("miejsc") || v == "transports" || v == "transport-i-miejsca")
+            return ProductCategory.Transports;
+        if (v.Contains("usług") || v.Contains("uslug") || v.Contains("termin") || v == "services" || v == "uslugi-i-wolne-terminy")
+            return ProductCategory.Services;
+        if (Enum.TryParse<ProductCategory>(value, true, out var result))
+            return result;
+        return null;
+    }
+
+    private static string GetCategoryDisplayName(ProductCategory category) => category switch
+    {
+        ProductCategory.Tickets => "Bilety i rezerwacje",
+        ProductCategory.Reservations => "Rezerwacje",
+        ProductCategory.Trips => "Wyjazdy i podróże",
+        ProductCategory.Transports => "Transport i miejsca",
+        ProductCategory.Services => "Usługi i wolne terminy",
+        _ => category.ToString()
+    };
+
+    private static string GetOgloszeniaSuffix(int count)
+    {
+        if (count == 1) return "ogłoszenie";
+        if (count >= 2 && count <= 4) return "ogłoszenia";
+        if (count >= 5 && count <= 21) return "ogłoszeń";
+        var lastDigit = count % 10;
+        if (lastDigit >= 2 && lastDigit <= 4) return "ogłoszenia";
+        return "ogłoszeń";
+    }
+}

@@ -44,13 +44,38 @@ namespace ReShareBlazorApp.Web.ApiServices
             return "Produkt dodany pomyślnie!";
         }
         public async Task<List<ProductDTO>> GetProductsAsync
-            (int number = 5,
-            ProductCategory? category = null)
+            (int number = 50,
+            ProductCategory? category = null,
+            string? query = null,
+            decimal? minPrice = null,
+            decimal? maxPrice = null,
+            DateTime? dateFrom = null,
+            DateTime? dateTo = null)
         {
             var url = $"api/product?number={number}";
             if(category.HasValue)
             {
                 url += $"&category={Uri.EscapeDataString(category.Value.ToString())}";
+            }
+            if(!string.IsNullOrWhiteSpace(query))
+            {
+                url += $"&query={Uri.EscapeDataString(query.Trim())}";
+            }
+            if(minPrice.HasValue)
+            {
+                url += $"&minPrice={minPrice.Value}";
+            }
+            if(maxPrice.HasValue)
+            {
+                url += $"&maxPrice={maxPrice.Value}";
+            }
+            if(dateFrom.HasValue)
+            {
+                url += $"&dateFrom={dateFrom.Value:yyyy-MM-dd}";
+            }
+            if(dateTo.HasValue)
+            {
+                url += $"&dateTo={dateTo.Value:yyyy-MM-dd}";
             }
             var response = await _httpClient.GetAsync(url);
             response.EnsureSuccessStatusCode();

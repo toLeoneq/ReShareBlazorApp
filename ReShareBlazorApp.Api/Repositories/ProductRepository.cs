@@ -30,18 +30,44 @@ namespace ReShareBlazorApp.Api.Repositories
             }
         }
         public async Task<List<Product>> GetProducts(
-            int number = 5,
-            ProductCategory? category = null
+            int number = 50,
+            ProductCategory? category = null,
+            string? query = null,
+            decimal? minPrice = null,
+            decimal? maxPrice = null,
+            DateTime? dateFrom = null,
+            DateTime? dateTo = null
             )
         {
             try
             {
-                var query = _context.Products.Include(p => p.user).AsQueryable();
+                var q = _context.Products.Include(p => p.user).AsQueryable();
                 if(category.HasValue)
                 {
-                    query = query.Where(p => p.Category == category.Value);
+                    q = q.Where(p => p.Category == category.Value);
                 }
-                return await query
+                if (!string.IsNullOrWhiteSpace(query))
+                {
+                    var s = query.Trim();
+                    q = q.Where(p => p.Name.Contains(s) || (p.Description != null && p.Description.Contains(s)));
+                }
+                if (minPrice.HasValue)
+                {
+                    q = q.Where(p => p.Price >= minPrice.Value);
+                }
+                if (maxPrice.HasValue && maxPrice.Value > 0)
+                {
+                    q = q.Where(p => p.Price <= maxPrice.Value);
+                }
+                if (dateFrom.HasValue)
+                {
+                    q = q.Where(p => p.AddedAt >= dateFrom.Value || p.ExpiresAt >= dateFrom.Value);
+                }
+                if (dateTo.HasValue)
+                {
+                    q = q.Where(p => p.ExpiresAt <= dateTo.Value);
+                }
+                return await q
                     .OrderByDescending(p => p.AddedAt)
                     .Take(number)
                     .ToListAsync();
